@@ -18,8 +18,8 @@ import (
 //
 // permits at most 90 seconds of cumulative request walltime for every 60
 // seconds that pass.
-func Per(d, period time.Duration) rate.Limit {
-	return rate.Limit(float64(d) / period.Seconds())
+func Per(duration time.Duration, period time.Duration) rate.Limit {
+	return rate.Limit(float64(duration) / period.Seconds())
 }
 
 // Transport is an http.RoundTripper that delays requests, using Limiter, so
@@ -51,9 +51,9 @@ type Option func(*Transport)
 
 // WithTransport sets the http.RoundTripper used to perform requests.
 // http.DefaultTransport is used if this option isn't given.
-func WithTransport(next http.RoundTripper) Option {
+func WithTransport(base http.RoundTripper) Option {
 	return func(t *Transport) {
-		t.Transport = next
+		t.Transport = base
 	}
 }
 
@@ -75,9 +75,9 @@ func WithEstimate(estimate time.Duration) Option {
 
 // New returns a Transport using a rate.Limiter constructed from r and b
 // exactly as rate.NewLimiter would.
-func New(r rate.Limit, b time.Duration, opts ...Option) *Transport {
+func New(r rate.Limit, burst time.Duration, opts ...Option) *Transport {
 	t := &Transport{
-		Limiter: rate.NewLimiter(r, int(b)),
+		Limiter: rate.NewLimiter(r, int(burst)),
 	}
 	for _, opt := range opts {
 		opt(t)
